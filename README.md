@@ -67,6 +67,30 @@ dashboards (and every AI answer) comes from what people actually do in the app.
 7. Employee downloads payslip PDF; asks AI for *a colleague's salary* → politely refused.
 8. Admin opens the **Audit log** — every action above is there with before/after JSON.
 
+## Deploying to Vercel
+
+The repo deploys as-is, but **environment variables must be added in Vercel before the first
+build** (secrets never travel via git — that's by design):
+
+1. Vercel → your project → **Settings → Environment Variables** → add (copy values from your
+   local `.env.local`):
+
+   | Variable | Value |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://…​.supabase.co` |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_…` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | `sb_secret_…` (server-only) |
+   | `AI_BASE_URL` | e.g. `https://generativelanguage.googleapis.com/v1beta/openai/` |
+   | `AI_API_KEY` | your LLM key (server-only) |
+   | `AI_MODEL` | e.g. `gemini-3.5-flash-lite` |
+   | `AI_TIMEOUT_MS` *(optional)* | `30000` |
+   | `RESEND_API_KEY` / `EMAIL_FROM` *(optional)* | for real email delivery |
+
+2. **Deployments → latest → Redeploy** (NEXT_PUBLIC_* values are baked in at build time, so a
+   redeploy is required after adding them).
+3. If you forget the variables, the login page shows a friendly **"Deployment not configured"**
+   banner listing exactly what's missing — no white crash screens.
+
 ## Roles & permissions (enforced on the server, not just hidden buttons)
 
 - **Admin** — company setup & rules, departments/designations/holidays, create HR logins,

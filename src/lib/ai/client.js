@@ -76,11 +76,17 @@ export async function callLLM(opts) {
   if (!aiConfigured()) {
     throw new AppError(503, "The AI assistant is not configured. Set AI_API_KEY in the server environment.");
   }
-  // one silent retry on network hiccups (timeouts/5xx) — providers can blip
+  // one silent retry on network hiccups (timeouts/5xx) — but only while we
+  // still have time budget left, so serverless limits are never blown
+  const start = Date.now();
   try {
     return await singleCall(opts);
   } catch (err) {
-    if (err instanceof AppError && (err.status === 504 || err.status === 502)) {
+    if (
+      err instanceof AppError &&
+      (err.status === 504 || err.status === 502) &&
+      Date.now() - start < 15_000
+    ) {
       return await singleCall(opts);
     }
     throw err;

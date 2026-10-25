@@ -4,7 +4,7 @@ import { aiConfigured, callLLM } from "@/lib/ai/client";
 import { getSettings, addDays, todayStr } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // Vercel Hobby plan limit
 
 const PARSE_TOOL = {
   type: "function",

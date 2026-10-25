@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { missingPublicConfig } from "@/lib/config";
+import { ConfigBanner } from "@/components/config-banner";
 
 const ROLE_HOME = { admin: "/admin", hr: "/hr", employee: "/employee" };
 
@@ -97,6 +99,10 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const missing = missingPublicConfig();
+  if (missing.length) {
+    return <ConfigBanner missing={missing} extra={["SUPABASE_SERVICE_ROLE_KEY", "AI_BASE_URL", "AI_API_KEY", "AI_MODEL"]} />;
+  }
   return (
     <div className="relative flex min-h-screen items-center justify-center p-4">
       <AuthBackdrop />

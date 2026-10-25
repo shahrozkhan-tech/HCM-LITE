@@ -11,6 +11,15 @@ export async function middleware(request) {
   // the marketing landing page is always public
   if (request.nextUrl.pathname === "/") return response;
 
+  // deployment not configured (e.g. missing env vars on Vercel): never crash —
+  // send everything to /login, which shows a friendly configuration banner
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    if (PUBLIC_PATHS.some((p) => request.nextUrl.pathname === p)) return response;
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,

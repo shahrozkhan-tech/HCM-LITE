@@ -6,7 +6,7 @@ import { aiConfigured, runToolLoop } from "@/lib/ai/client";
 import { getSettings } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60; // Vercel Hobby plan limit
 
 const RATE_LIMIT_PER_HOUR = 20;
 
