@@ -12,6 +12,7 @@ import { LineChartCard, BarChartCard } from "@/components/charts";
 import { useGetDashboardQuery, useGetOrgQuery, useGetSettingsQuery, useGetMeQuery, useAiSummaryMutation } from "@/store/api";
 import { EmptyState } from "@/components/page-header";
 import { HeroBanner } from "@/components/hero-banner";
+import { CelebrationsWidget } from "@/components/features/celebrations-widget";
 
 export function HrDashboard() {
   const { data: me } = useGetMeQuery();
@@ -203,6 +204,8 @@ export function HrDashboard() {
             </CardContent>
           </Card>
         )}
+
+        <CelebrationsWidget />
 
         {/* company rules — HR view (checklist #3/#4) */}
         <Card className="lg:col-span-2">

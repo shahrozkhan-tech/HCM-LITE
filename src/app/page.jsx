@@ -52,7 +52,7 @@ const MODULES = [
   { icon: CalendarClock, name: "M4 · Attendance", desc: "Web check-in/out, auto status rules, corrections, camera + location." },
   { icon: Plane, name: "M5 · Leave", desc: "Apply, balances, overlap & holiday checks, HR approval inbox." },
   { icon: Wallet, name: "M6 · Payroll Lite", desc: "Salary structure, monthly run, tax slab, locked finalize, payslip PDF." },
-  { icon: LayoutDashboard, name: "M7 · Dashboards", desc: "Role-based KPIs, trends & insights — all computed on the server." },
+  { icon: LayoutDashboard, name: "M7 · Dashboards", desc: "Role-based KPIs, trends & insights — all computed on the server. Plus a monthly Reports & Analytics page with CSV export." },
   { icon: Bot, name: "M8 · AI Assistant", desc: "Chat with tools, dashboard summaries, smart leave, policy Q&A." },
   { icon: Megaphone, name: "M9 · Comms & Audit", desc: "Announcements, in-app notifications, designed emails, audit log." },
 ];
@@ -107,17 +107,26 @@ const BONUS = [
   { icon: ScrollText, label: "Audit trail", sub: "before/after JSON history" },
 ];
 
+const STATS = [
+  { value: "9", label: "Integrated modules" },
+  { value: "25+", label: "Checklist functionalities" },
+  { value: "3", label: "Roles with server-side scope" },
+  { value: "100%", label: "Live data — zero dummy rows" },
+];
+
+const STEPS = [
+  { icon: Building2, title: "Sign up as Admin", desc: "The first sign-up creates the company: office hours, grace period, weekends, office geofence, departments & holidays." },
+  { icon: Users, title: "Register your people", desc: "HR adds employees — logins are created automatically with a temporary password and a forced first sign-in change." },
+  { icon: CalendarClock, title: "Track every day", desc: "Web or camera check-in/out, leave in plain words, HR approvals — every rule enforced on the server." },
+  { icon: Wallet, title: "Pay & analyze", desc: "HR builds the payroll draft, Admin locks the month, payslips go out — then Reports turn records into insight." },
+];
+
 /* ── page ──────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const { theme, setTheme } = useTheme();
-  const [fresh, setFresh] = useState(null); // null = loading, true = fresh install
   const [home, setHome] = useState(null); // role home when already signed in
 
   useEffect(() => {
-    fetch("/api/setup")
-      .then((r) => r.json())
-      .then((d) => setFresh(Boolean(d.fresh)))
-      .catch(() => setFresh(false));
     (async () => {
       try {
         const supabase = createSupabaseBrowserClient();
@@ -154,6 +163,7 @@ export default function LandingPage() {
             HCM <span className="gradient-text">Lite</span>
           </span>
           <nav className="ml-6 hidden items-center gap-5 text-sm font-medium text-muted-foreground md:flex">
+            <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
             <a href="#modules" className="transition-colors hover:text-foreground">Modules</a>
             <a href="#roles" className="transition-colors hover:text-foreground">Roles</a>
             <a href="#ai" className="transition-colors hover:text-foreground">AI Assistant</a>
@@ -174,8 +184,8 @@ export default function LandingPage() {
                   <a href="/login">Sign in</a>
                 </Button>
                 <Button asChild size="sm" className="gap-2">
-                  <a href={fresh ? "/setup" : "/login"}>
-                    <Rocket className="h-4 w-4" /> {fresh === null ? "Get started" : fresh ? "Set up company" : "Sign in"}
+                  <a href="/login">
+                    <Rocket className="h-4 w-4" /> Get started
                   </a>
                 </Button>
               </>
@@ -201,8 +211,8 @@ export default function LandingPage() {
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="gap-2 rounded-xl">
-              <a href={fresh ? "/setup" : "/login"}>
-                {home ? "Open my dashboard" : fresh ? "Start first-run setup" : "Sign in to workspace"}
+              <a href="/login">
+                {home ? "Open my dashboard" : "Sign in / Sign up"}
                 <ArrowRight className="h-4 w-4" />
               </a>
             </Button>
@@ -266,6 +276,42 @@ export default function LandingPage() {
             </div>
           </div>
         </Reveal>
+      </section>
+
+      {/* ── stats band ──────────────────────────────────────────────── */}
+      <section className="border-y bg-muted/30">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 stagger md:grid-cols-4">
+          {STATS.map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="gradient-text text-3xl font-extrabold tracking-tight md:text-4xl">{s.value}</p>
+              <p className="mt-1 text-xs font-medium text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── how it works ────────────────────────────────────────────── */}
+      <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
+        <Reveal className="mb-8 text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight">From empty workspace to payslips</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+            A guided four-step flow — the demo story judges can walk through in five minutes.
+          </p>
+        </Reveal>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((s, i) => (
+            <Reveal key={s.title} delay={0.06 * i}>
+              <div className="card-hover relative h-full rounded-2xl border bg-card p-5">
+                <span className="absolute right-4 top-3 text-4xl font-extrabold text-muted-foreground/15">{i + 1}</span>
+                <div className="bg-brand-gradient mb-3 flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md">
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <p className="font-bold">{s.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* ── modules ─────────────────────────────────────────────────── */}
@@ -432,8 +478,8 @@ export default function LandingPage() {
             </p>
             <div className="relative mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" variant="secondary" className="gap-2 rounded-xl font-bold">
-                <a href={home ?? (fresh ? "/setup" : "/login")}>
-                  {home ? "Go to my dashboard" : fresh ? "Create the first Admin" : "Sign in"}
+                <a href={home ?? "/login"}>
+                  {home ? "Go to my dashboard" : "Sign in / Sign up"}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </Button>
@@ -448,22 +494,38 @@ export default function LandingPage() {
       </section>
 
       {/* ── footer ──────────────────────────────────────────────────── */}
-      <footer className="border-t py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 text-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-brand-gradient flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-extrabold text-white">HC</div>
-            <span className="font-extrabold">HCM Lite</span>
+      <footer className="border-t py-10">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 md:grid-cols-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="bg-brand-gradient flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-extrabold text-white">HC</div>
+              <span className="font-extrabold">HCM Lite</span>
+            </div>
+            <p className="mt-3 max-w-xs text-xs leading-relaxed text-muted-foreground">
+              AI-assisted Human Capital Management for Admin, HR and Employees —
+              built for the Saylani Hackathon 2026 with Next.js, Supabase & Redux Toolkit.
+            </p>
           </div>
-          <p className="max-w-md text-xs text-muted-foreground">
-            AI-assisted Human Capital Management · Next.js · Supabase · Redux Toolkit ·
-            built for the Saylani Hackathon 2026
-          </p>
-          <div className="flex flex-wrap justify-center gap-x-5 text-xs font-medium text-muted-foreground">
-            <a href="/login" className="hover:text-foreground">Sign in</a>
-            <a href="/setup" className="hover:text-foreground">First-run setup</a>
-            <a href="#modules" className="hover:text-foreground">Modules</a>
-            <a href="#ai" className="hover:text-foreground">AI Assistant</a>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Product</p>
+            <div className="mt-3 grid gap-2 text-sm">
+              <a href="/login" className="text-muted-foreground transition-colors hover:text-foreground">Sign in</a>
+              <a href="/login" className="text-muted-foreground transition-colors hover:text-foreground">Sign up / Sign in</a>
+              <a href="#how" className="text-muted-foreground transition-colors hover:text-foreground">How it works</a>
+              <a href="/sample-payslip.pdf" target="_blank" rel="noreferrer" className="text-muted-foreground transition-colors hover:text-foreground">Sample payslip PDF</a>
+            </div>
           </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Highlights</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {["Geo attendance", "Slab-tax payroll", "Leave workflows", "AI assistant", "Payslip PDFs", "Audit trail"].map((t) => (
+                <span key={t} className="rounded-full border bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mx-auto mt-8 max-w-6xl border-t px-4 pt-6 text-center text-[11px] text-muted-foreground">
+          © {new Date().getFullYear()} HCM Lite · Saylani Hackathon 2026 · every number on every page comes from live data only
         </div>
       </footer>
     </div>

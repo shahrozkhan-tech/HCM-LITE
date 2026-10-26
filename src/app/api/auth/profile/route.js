@@ -34,6 +34,16 @@ export async function PATCH(req) {
       await writeAudit(ctx.admin, ctx.profile, "update", "profile", ctx.userId, null, { action: "password changed on first sign-in" });
     }
 
-    return ok({ success: true });
+    const res = ok({ success: true });
+    // keep the middleware routing-cache cookie in sync (role|must_change)
+    if (patch.must_change_password === false) {
+      res.cookies.set("hcm_ctx", `${ctx.profile.role}|0`, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 60 * 30,
+        sameSite: "lax",
+      });
+    }
+    return res;
   });
 }

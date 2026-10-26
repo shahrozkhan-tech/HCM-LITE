@@ -45,11 +45,11 @@ dashboards (and every AI answer) comes from what people actually do in the app.
    ```
    Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
    Free-tier availability and rate limits depend on Google's current plan and region.
-4. `npm run dev` → open http://localhost:3000 — you land on the **professional landing page**
-   (hero + dashboard mockup, 9 modules, roles, AI showcase, bonus grid). Its navbar adapts:
-   fresh install shows *Set up company*, signed-in users get *Go to dashboard*.
-5. Click **Set up company** → the **first-run setup**: enter company name + Admin email/password
-   (or pre-set `ADMIN_EMAIL` / `ADMIN_PASSWORD` env and the form pre-fills).
+4. `npm run dev` → open http://localhost:3000 — you land on the **professional landing page**.
+5. Click **Get started** → the auth page. **Sign up** (fresh install) creates the company and
+   the first Admin in one step — you're signed straight into the dashboard. Afterwards the
+   sign-up tab disappears and it's **Sign in only**. (`ADMIN_EMAIL` / `ADMIN_PASSWORD` env
+   values are still honored by the API if you prefer scripting the first account.)
 6. Sign in as Admin → create an **HR login** (Users page) → HR registers **employees**
    (a login with a temporary password is created — employee must change it on first
    sign-in) → employees check in / apply leave → HR approves / runs payroll →

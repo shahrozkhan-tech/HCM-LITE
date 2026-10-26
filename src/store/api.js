@@ -27,7 +27,7 @@ export const hcmApi = createApi({
   baseQuery: baseQueryWithErrorToast,
   tagTypes: [
     "Me", "Org", "Settings", "Users", "Employees", "Employee", "Attendance",
-    "Leaves", "Balance", "Payroll", "Dashboard", "Announcements", "Notifications", "Audit",
+    "Leaves", "Balance", "Payroll", "Dashboard", "Announcements", "Notifications", "Audit", "Reports",
   ],
   endpoints: (builder) => ({
     // ── auth ────────────────────────────────────────────────────────────
@@ -167,6 +167,10 @@ export const hcmApi = createApi({
       query: (params) => ({ url: "/dashboard", params }),
       providesTags: ["Dashboard"],
     }),
+    getReports: builder.query({
+      query: (params) => ({ url: "/reports", params }),
+      providesTags: ["Reports"],
+    }),
     getAnnouncements: builder.query({ query: () => "/announcements", providesTags: ["Announcements"] }),
     postAnnouncement: builder.mutation({
       query: (body) => ({ url: "/announcements", method: "POST", body }),
@@ -207,7 +211,7 @@ export const {
   useGetLeavesQuery, useApplyLeaveMutation, useLeaveActionMutation, useGetBalanceQuery,
   useGetRunsQuery, useGetRunQuery, useCreateRunMutation, useDeleteRunMutation,
   useFinalizeRunMutation, useGetMyPayslipsQuery,
-  useGetDashboardQuery, useGetAnnouncementsQuery, usePostAnnouncementMutation,
+  useGetDashboardQuery, useGetReportsQuery, useGetAnnouncementsQuery, usePostAnnouncementMutation,
   useGetNotificationsQuery, useMarkNotificationsReadMutation,
   useGetAuditQuery, useGetEmailsQuery,
   useAiChatMutation, useAiSummaryMutation, useAiSmartLeaveMutation,

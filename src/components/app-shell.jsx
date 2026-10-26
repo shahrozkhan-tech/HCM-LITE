@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Users, CalendarClock, Plane, Wallet, Building2,
-  UserCog, Megaphone, ScrollText, LogOut, Sun, Moon, Sparkles, Bell,
-  Menu, CircleUser, Download, Mail,
+  UserCog, Megaphone, ScrollText, LogOut, Sun, Moon, Bell,
+  Menu, CircleUser, Download, Mail, BarChart3, Bot,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -22,42 +22,65 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { AiAssistant } from "@/components/ai-assistant";
+import { CommandPalette, CommandPaletteButton } from "@/components/command-palette";
 import { useGetNotificationsQuery, useMarkNotificationsReadMutation } from "@/store/api";
 
 const ICONS = {
   dashboard: LayoutDashboard, employees: Users, attendance: CalendarClock,
   leaves: Plane, payroll: Wallet, org: Building2, users: UserCog,
   announcements: Megaphone, audit: ScrollText, profile: CircleUser,
-  payslips: Download, emails: Mail,
+  payslips: Download, emails: Mail, reports: BarChart3,
 };
 
 const NAV = {
   admin: [
-    { label: "Dashboard", href: "/admin", icon: "dashboard" },
-    { label: "Employees", href: "/admin/employees", icon: "employees" },
-    { label: "Attendance", href: "/admin/attendance", icon: "attendance" },
-    { label: "Leaves", href: "/admin/leaves", icon: "leaves" },
-    { label: "Payroll", href: "/admin/payroll", icon: "payroll" },
-    { label: "Organization", href: "/admin/settings", icon: "org" },
-    { label: "Users", href: "/admin/users", icon: "users" },
-    { label: "Announcements", href: "/admin/announcements", icon: "announcements" },
-    { label: "Emails", href: "/admin/emails", icon: "emails" },
-    { label: "Audit Log", href: "/admin/audit", icon: "audit" },
+    { group: "Overview", items: [
+      { label: "Dashboard", href: "/admin", icon: "dashboard" },
+      { label: "Reports & Analytics", href: "/admin/reports", icon: "reports" },
+    ]},
+    { group: "People", items: [
+      { label: "Employees", href: "/admin/employees", icon: "employees" },
+      { label: "Users", href: "/admin/users", icon: "users" },
+    ]},
+    { group: "Time & Pay", items: [
+      { label: "Attendance", href: "/admin/attendance", icon: "attendance" },
+      { label: "Leaves", href: "/admin/leaves", icon: "leaves" },
+      { label: "Payroll", href: "/admin/payroll", icon: "payroll" },
+    ]},
+    { group: "Company", items: [
+      { label: "Announcements", href: "/admin/announcements", icon: "announcements" },
+      { label: "Organization", href: "/admin/settings", icon: "org" },
+      { label: "Emails", href: "/admin/emails", icon: "emails" },
+      { label: "Audit Log", href: "/admin/audit", icon: "audit" },
+    ]},
   ],
   hr: [
-    { label: "Dashboard", href: "/hr", icon: "dashboard" },
-    { label: "Employees", href: "/hr/employees", icon: "employees" },
-    { label: "Attendance", href: "/hr/attendance", icon: "attendance" },
-    { label: "Leaves", href: "/hr/leaves", icon: "leaves" },
-    { label: "Payroll", href: "/hr/payroll", icon: "payroll" },
-    { label: "Announcements", href: "/hr/announcements", icon: "announcements" },
+    { group: "Overview", items: [
+      { label: "Dashboard", href: "/hr", icon: "dashboard" },
+      { label: "Reports & Analytics", href: "/hr/reports", icon: "reports" },
+    ]},
+    { group: "People", items: [
+      { label: "Employees", href: "/hr/employees", icon: "employees" },
+    ]},
+    { group: "Time & Pay", items: [
+      { label: "Attendance", href: "/hr/attendance", icon: "attendance" },
+      { label: "Leaves", href: "/hr/leaves", icon: "leaves" },
+      { label: "Payroll", href: "/hr/payroll", icon: "payroll" },
+    ]},
+    { group: "Company", items: [
+      { label: "Announcements", href: "/hr/announcements", icon: "announcements" },
+    ]},
   ],
   employee: [
-    { label: "Dashboard", href: "/employee", icon: "dashboard" },
-    { label: "My Attendance", href: "/employee/attendance", icon: "attendance" },
-    { label: "My Leaves", href: "/employee/leaves", icon: "leaves" },
-    { label: "My Payslips", href: "/employee/payslips", icon: "payslips" },
-    { label: "My Profile", href: "/employee/profile", icon: "profile" },
+    { group: "Overview", items: [
+      { label: "Dashboard", href: "/employee", icon: "dashboard" },
+    ]},
+    { group: "My space", items: [
+      { label: "My Attendance", href: "/employee/attendance", icon: "attendance" },
+      { label: "My Leaves", href: "/employee/leaves", icon: "leaves" },
+      { label: "My Payslips", href: "/employee/payslips", icon: "payslips" },
+      { label: "My Profile", href: "/employee/profile", icon: "profile" },
+    ]},
   ],
 };
 
@@ -84,7 +107,8 @@ export function AppShell({ profile, companyName, children }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const items = NAV[profile.role] ?? NAV.employee;
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const groups = NAV[profile.role] ?? NAV.employee;
 
   const { data: notifications } = useGetNotificationsQuery();
   const [markRead] = useMarkNotificationsReadMutation();
@@ -98,32 +122,43 @@ export function AppShell({ profile, companyName, children }) {
     router.refresh();
   };
 
+  const flatForActive = (item) => {
+    const isRoot = item.href === "/admin" || item.href === "/hr" || item.href === "/employee";
+    return pathname === item.href || (!isRoot && pathname.startsWith(item.href + "/"));
+  };
+
   const NavLinks = ({ onNavigate }) => (
     <nav className="flex flex-col gap-1 p-3">
-      {items.map((item, i) => {
-        const Icon = ICONS[item.icon];
-        const isRoot = item.href === "/admin" || item.href === "/hr" || item.href === "/employee";
-        const active = pathname === item.href || (!isRoot && pathname.startsWith(item.href + "/"));
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            style={{ animationDelay: `${0.03 * i}s` }}
-            className={cn(
-              "group relative flex animate-fade-up items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
-              active
-                ? "bg-brand-gradient text-white shadow-md"
-                : "text-muted-foreground hover:translate-x-1 hover:bg-accent hover:text-accent-foreground"
-            )}
-          >
-            {active && <span className="nav-active-bar -left-3" />}
-            <Icon className={cn("h-4 w-4 transition-transform duration-200", !active && "group-hover:scale-110")} />
-            {item.label}
-            {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white/90 ping-dot" />}
-          </Link>
-        );
-      })}
+      {groups.map((g, gi) => (
+        <div key={g.group}>
+          <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+            {g.group}
+          </p>
+          {g.items.map((item, i) => {
+            const Icon = ICONS[item.icon];
+            const active = flatForActive(item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                style={{ animationDelay: `${0.02 * (gi * 3 + i)}s` }}
+                className={cn(
+                  "group relative flex animate-fade-up items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
+                  active
+                    ? "bg-brand-gradient text-white shadow-md"
+                    : "text-muted-foreground hover:translate-x-1 hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                {active && <span className="nav-active-bar -left-3" />}
+                <Icon className={cn("h-4 w-4 transition-transform duration-200", !active && "group-hover:scale-110")} />
+                {item.label}
+                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white/90 ping-dot" />}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 
@@ -131,9 +166,9 @@ export function AppShell({ profile, companyName, children }) {
     <div className="min-h-screen">
       {/* ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="blob left-[-8%] top-[-10%] h-72 w-72 bg-indigo-400/30 dark:bg-indigo-600/15" style={{ animation: "floaty 11s ease-in-out infinite" }} />
-        <div className="blob right-[-6%] top-[30%] h-80 w-80 bg-fuchsia-400/25 dark:bg-fuchsia-600/12" style={{ animation: "floaty 14s ease-in-out infinite reverse" }} />
-        <div className="blob bottom-[-12%] left-[30%] h-72 w-72 bg-cyan-400/20 dark:bg-cyan-600/10" style={{ animation: "floaty 17s ease-in-out infinite" }} />
+        <div className="blob left-[-8%] top-[-10%] h-72 w-72 bg-indigo-400/25 dark:bg-indigo-600/15" style={{ animation: "floaty 11s ease-in-out infinite" }} />
+        <div className="blob right-[-6%] top-[30%] h-80 w-80 bg-fuchsia-400/20 dark:bg-fuchsia-600/12" style={{ animation: "floaty 14s ease-in-out infinite reverse" }} />
+        <div className="blob bottom-[-12%] left-[30%] h-72 w-72 bg-cyan-400/15 dark:bg-cyan-600/10" style={{ animation: "floaty 17s ease-in-out infinite" }} />
       </div>
 
       {/* desktop sidebar */}
@@ -175,6 +210,7 @@ export function AppShell({ profile, companyName, children }) {
           <div className="lg:hidden text-sm font-bold gradient-text">{companyName || "HCM Lite"}</div>
 
           <div className="ml-auto flex items-center gap-1.5">
+            <CommandPaletteButton onClick={() => setPaletteOpen(true)} />
             <AiAssistant role={profile.role} />
 
             {/* notifications */}
@@ -245,6 +281,13 @@ export function AppShell({ profile, companyName, children }) {
           <span className="gradient-text font-bold">HCM Lite</span> · Saylani Hackathon 2026 · answers from live data only
         </footer>
       </div>
+
+      <CommandPalette
+        role={profile.role}
+        onSignOut={logout}
+        open={paletteOpen}
+        setOpen={setPaletteOpen}
+      />
     </div>
   );
 }

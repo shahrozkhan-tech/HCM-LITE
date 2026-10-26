@@ -1,17 +1,25 @@
 "use client";
 
-import { Clock, AlertTriangle, Megaphone, Download } from "lucide-react";
+import Link from "next/link";
+import { Clock, AlertTriangle, Megaphone, Download, CalendarDays, Plane, UserRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/stat-card";
 import { CheckInWidget } from "@/components/check-in-widget";
 import { HeroBanner } from "@/components/hero-banner";
-import { UserRound } from "lucide-react";
-import { useGetDashboardQuery, useGetMeQuery } from "@/store/api";
+import { useGetDashboardQuery, useGetMeQuery, useGetOrgQuery } from "@/store/api";
 import { formatMoney, formatDate, titleCase } from "@/lib/utils";
+
+const QUICK_ACTIONS = [
+  { label: "Apply for leave", sub: "AI can fill it from plain words", href: "/employee/leaves", icon: Plane },
+  { label: "My attendance", sub: "calendar & corrections", href: "/employee/attendance", icon: CalendarDays },
+  { label: "My payslips", sub: "download PDFs", href: "/employee/payslips", icon: Download },
+  { label: "My profile", sub: "phone & address", href: "/employee/profile", icon: UserRound },
+];
 
 export function EmployeeDashboard() {
   const { data: me } = useGetMeQuery();
+  const { data: org } = useGetOrgQuery();
   const { data, isLoading } = useGetDashboardQuery();
 
   if (isLoading || !data?.employee) {
@@ -23,6 +31,12 @@ export function EmployeeDashboard() {
   }
 
   const d = data.employee;
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingHolidays = (org?.holidays ?? [])
+    .filter((h) => h.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 4);
+  const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "short" });
 
   return (
     <div className="space-y-6">
@@ -61,6 +75,25 @@ export function EmployeeDashboard() {
           icon={AlertTriangle}
           tone={d.lateThisMonth > 0 ? "warning" : "success"}
         />
+      </div>
+
+      {/* quick actions */}
+      <div className="grid grid-cols-2 gap-3 stagger lg:grid-cols-4">
+        {QUICK_ACTIONS.map((a) => (
+          <Link
+            key={a.href}
+            href={a.href}
+            className="card-hover group flex items-center gap-3 rounded-xl border bg-card p-3.5"
+          >
+            <div className="bg-brand-gradient-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border text-primary transition-transform duration-300 group-hover:scale-110">
+              <a.icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{a.label}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{a.sub}</p>
+            </div>
+          </Link>
+        ))}
       </div>
 
       {/* leave balances */}
@@ -127,20 +160,47 @@ export function EmployeeDashboard() {
           </CardContent>
         </Card>
 
-        {/* announcements */}
+        {/* upcoming holidays */}
         <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm"><CalendarDays className="h-4 w-4 text-primary" /> Upcoming holidays</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {upcomingHolidays.length === 0 && (
+              <p className="text-sm text-muted-foreground">No upcoming holidays announced yet — Admin adds them in Organization settings.</p>
+            )}
+            {upcomingHolidays.map((h) => (
+              <div key={h.id} className="flex items-center gap-3 text-sm">
+                <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-lg border bg-muted/50 leading-none">
+                  <span className="text-[9px] font-bold uppercase text-muted-foreground">{weekday.format(new Date(h.date + "T12:00:00"))}</span>
+                  <span className="text-sm font-extrabold">{h.date.slice(8, 10)}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{h.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{formatDate(h.date)}</p>
+                </div>
+                {h.date === today && (
+                  <span className="ml-auto shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">TODAY</span>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* announcements */}
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm"><Megaphone className="h-4 w-4 text-primary" /> Announcements</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="grid gap-3 sm:grid-cols-2">
             {(d.announcements ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">No announcements yet.</p>
+              <p className="text-sm text-muted-foreground sm:col-span-2">No announcements yet.</p>
             )}
             {(d.announcements ?? []).map((a) => (
-              <div key={a.id} className="border-b pb-2 last:border-0 last:pb-0">
+              <div key={a.id} className="rounded-xl border p-3">
                 <p className="text-sm font-medium">{a.title}</p>
                 <p className="line-clamp-2 text-xs text-muted-foreground">{a.body}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                <p className="mt-1 text-[10px] text-muted-foreground">
                   {a.author?.full_name ?? "Company"} · {formatDate(a.created_at)}
                 </p>
               </div>

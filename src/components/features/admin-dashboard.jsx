@@ -14,6 +14,7 @@ import { Building2 } from "lucide-react";
 import { useGetDashboardQuery, useGetMeQuery, useAiSummaryMutation } from "@/store/api";
 import { formatMoney, formatDate, cn } from "@/lib/utils";
 import { EmptyState } from "@/components/page-header";
+import { CelebrationsWidget } from "@/components/features/celebrations-widget";
 
 export function AdminDashboard() {
   const { data: me } = useGetMeQuery();
@@ -176,6 +177,8 @@ export function AdminDashboard() {
             <BarChartCard data={d.tenureBuckets} xKey="name" series={[{ key: "value", name: "Employees" }]} />
           </CardContent>
         </Card>
+
+        <CelebrationsWidget />
       </div>
 
       {/* bonus: attrition risk score */}
